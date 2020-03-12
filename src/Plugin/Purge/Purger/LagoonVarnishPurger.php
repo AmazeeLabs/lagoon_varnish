@@ -14,7 +14,7 @@ use Drupal\varnish_purger\Plugin\Purge\Purger\VarnishPurgerBase;
  *   label = @Translation("Lagoon Varnish Purger"),
  *   cooldown_time = 0.0,
  *   description = @Translation("Varnish purger that makes HTTP requests for each given invalidation instruction."),
- *   multi_instance = TRUE,
+ *   multi_instance = FALSE,
  *   types = {},
  * )
  */
@@ -40,7 +40,6 @@ class LagoonVarnishPurger extends VarnishPurgerBase implements PurgerInterface {
       $token_data = ['invalidation' => $invalidation];
       $uri = $this->getUri($token_data);
       $opt = $this->getOptions($token_data);
-
       try {
         $this->client->request($this->settings->request_method, $uri, $opt);
         $invalidation->setState(InvalidationInterface::SUCCEEDED);
@@ -101,9 +100,9 @@ class LagoonVarnishPurger extends VarnishPurgerBase implements PurgerInterface {
   protected function getHeaders($token_data) {
     $headers = [];
     $headers['user-agent'] = 'varnish_purger module for Drupal 8.';
-    foreach (self::LAGOON_VARNISH_HEADERS as $header) {
-      $headers[strtolower($header['field'])] = $this->token->replace(
-        $header['value'],
+    foreach (self::LAGOON_VARNISH_REQUEST_HEADERS as $field => $value) {
+      $headers[strtolower($field)] = $this->token->replace(
+        $value,
         $token_data
       );
     }
